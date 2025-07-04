@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import nipplejs from "nipplejs";
 import "@fortawesome/fontawesome-free/css/all.min.css";
 import "./App.css";
-import logo from "./logo.jpeg"; 
+import logo from "./logo.jpeg";
 
 export default function App() {
   const [speed, setSpeed] = useState(1);
@@ -13,16 +13,16 @@ export default function App() {
     const joystick = nipplejs.create({
       zone: joystickRef.current,
       mode: "static",
-      position: { left: "50%", top: "50%" }, 
+      position: { left: "50%", top: "50%" },
       color: "#3b82f6",
       size: 120,
-      restOpacity: 0.7, 
+      restOpacity: 0.7,
     });
 
     joystick.on("move", (evt, data) => {
       if (data.direction && data.distance) {
         const angle = data.angle.radian;
-        const distance = data.distance / 60; 
+        const distance = data.distance / 60;
         const linear = Math.sin(angle) * distance * speed;
         const angular = -Math.cos(angle) * distance * speed;
         sendMove(linear, angular);
@@ -31,6 +31,61 @@ export default function App() {
 
     joystick.on("end", () => sendMove(0, 0));
     return () => joystick.destroy();
+  }, [speed]);
+
+  useEffect(() => {
+    const pressedKeys = new Set();
+    let intervalId = null;
+
+    const updateMovement = () => {
+      let linear = 0;
+      let angular = 0;
+
+      if (pressedKeys.has('w')) linear += speed;
+      if (pressedKeys.has('s')) linear -= speed;
+      if (pressedKeys.has('a')) angular += speed;
+      if (pressedKeys.has('d')) angular -= speed;
+      if (pressedKeys.has('q')) {
+        linear += speed;
+        angular += speed;
+      }
+      if (pressedKeys.has('e')) {
+        linear += speed;
+        angular -= speed;
+      }
+
+      sendMove(linear, angular);
+    };
+
+    const handleKeyDown = (e) => {
+      const key = e.key.toLowerCase();
+      const validKeys = ['w', 'a', 's', 'd', 'q', 'e'];
+      if (validKeys.includes(key)) {
+        pressedKeys.add(key);
+        if (!intervalId) {
+          intervalId = setInterval(updateMovement, 100);
+        }
+      }
+    };
+
+    const handleKeyUp = (e) => {
+      const key = e.key.toLowerCase();
+      pressedKeys.delete(key);
+      if (pressedKeys.size === 0 && intervalId) {
+        clearInterval(intervalId);
+        intervalId = null;
+        sendMove(0, 0);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+      if (intervalId) clearInterval(intervalId);
+    };
   }, [speed]);
 
   const sendMove = async (linear, angular) => {
@@ -78,7 +133,6 @@ export default function App() {
 
   return (
     <div className="app">
-      
       <header className="header">
         <img src={logo} alt="Verlab Logo" className="logo" />
         <h1 className="title">Controle TurtleSim</h1>
