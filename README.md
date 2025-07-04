@@ -54,11 +54,11 @@ Siga os passos abaixo para iniciar o projeto em seu ambiente local:
   node script.js
 
    ```
-2️⃣ **Entre no front-end**
+2️⃣ **Entre no Front-End**
  ```bash
   cd frontend
    ```
-3️⃣**Rode o Backend**
+3️⃣**Rode o Front-End**
 
    ```bash
   npm run dev
